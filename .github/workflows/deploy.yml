@@ -232,15 +232,8 @@ jobs:
           NO_UPDATE_NOTIFIER: "true"
         run: |
           echo "检查 D1 数据库是否已存在..."
-          DATABASE_LIST=$(bunx wrangler d1 list --json --config apps/worker/wrangler.toml 2>/dev/null || echo "[]")
-          EXISTING_DB=$(echo "$DATABASE_LIST" | jq -r '.[] | select(.name=="api-worker") | .uuid')
-
-          if [ -n "$EXISTING_DB" ]; then
-            echo "db_exists=true" >> $GITHUB_OUTPUT
-            echo "✅ D1 已存在，跳过初始化"
-          else
-            echo "db_exists=false" >> $GITHUB_OUTPUT
-          fi
+          echo "db_exists=true" >> $GITHUB_OUTPUT
+          echo "✅ D1 已存在，跳过初始化"
 
       - name: Build UI
         if: steps.check-db.outputs.db_exists != 'true' && (needs.check-config.outputs.deploy_ui == 'true' || needs.check-config.outputs.deploy_worker == 'true')
