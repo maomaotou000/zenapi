@@ -218,11 +218,18 @@ jobs:
           echo "deploy_worker=${{ needs.check-config.outputs.deploy_worker }}"
           echo "should_migrate=${{ needs.check-config.outputs.should_migrate }}"
 
+      - name: Install dependencies
+        run: bun install
+
+      - name: Disable wrangler telemetry
+        run: bunx wrangler telemetry disable
+      
       - name: Check if D1 database exists
         id: check-db
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          NO_UPDATE_NOTIFIER: "true"
         run: |
           echo "检查 D1 数据库是否已存在..."
           DATABASE_LIST=$(bunx wrangler d1 list --json --config apps/worker/wrangler.toml 2>/dev/null || echo "[]")
@@ -234,10 +241,6 @@ jobs:
           else
             echo "db_exists=false" >> $GITHUB_OUTPUT
           fi
-
-      - name: Install dependencies
-        if: steps.check-db.outputs.db_exists != 'true'
-        run: bun install
 
       - name: Build UI
         if: steps.check-db.outputs.db_exists != 'true' && (needs.check-config.outputs.deploy_ui == 'true' || needs.check-config.outputs.deploy_worker == 'true')
